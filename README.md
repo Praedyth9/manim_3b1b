@@ -121,6 +121,35 @@ Look through the `old_projects` folder to see the code for previous 3b1b videos.
 
 While developing a scene, the `-sp` flags are helpful to just see what things look like at the end without having to generate the full animation. It can also be helpful to use the `-n` flag to skip over some number of animations.
 
+## Using the program to plot Bloch Sphere and operation performed on a qubit
+
+Once you have this repo installed on your computer, open cmd in that folder and type :
+```sh
+python3 -m manim BlochSphere_Example.py -pl
+```
+
+Prompt should give you a list of choice, you can select multiples of them by separating numbers with a comma. You can remove the `-l` if you want to have a render in High Quality.
+
+If you want to edit this script so it can perform other operations on a qubit, edit `BlochSphere_example.py` and add a class to the script with a name and list of operators + operators you want to perform on a qubit following this syntax :
+```py
+class BlochSphere_example_XXXX(BlochSphere):
+    CONFIG = {
+        "operators": [
+            InsertOperators,
+        ],
+        "operator_names": [
+            "InsertOperatornames",
+        ],
+    }
+```
+
+Gates available :
+
+- Pauli X, Y, Z
+- Hadamard
+- SQRT X, Y, H
+- PH
+  
 ### Documentation
 Documentation is in progress at [eulertour.com/docs](https://www.eulertour.com/docs/).
 
