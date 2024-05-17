@@ -21,7 +21,7 @@ class State(Mobject):
 		return np.array( spherical_to_cartesian(self.r, self.theta, self.phi) )
 
 	def create_line(self):
-		return Arrow3d(
+		return Line(
 			start=ORIGIN,
 			end=self._get_cartesian(),
 		)
@@ -94,8 +94,6 @@ class BlochSphere(SpecialThreeDScene):
 	}
 
 	def construct(self):
-		if self.show_intro:
-			self.present_introduction()
 		self.init_camera()
 		self.init_axes()
 		self.init_sphere()
@@ -108,66 +106,6 @@ class BlochSphere(SpecialThreeDScene):
 			self.wait(self.wait_time)
 		self.wait(self.final_wait_time)
 
-	def present_introduction(self):
-		self.intro_tex_1 = TextMobject(
-			"\\begin{flushleft}\n"
-			"The State of the Qbit"
-			"\\\\"
-			"as represented in the Bloch Sphere."
-			"\n\\end{flushleft}",
-			alignment="",
-		)
-		# self.intro_tex_1 = TextMobject(
-		# 	# "\\begin{align*}\n" + "The state of the Qbit" + "\n\\end{align*}",
-		# 	"\\begin{flalign}\n" + "The state of the Qbit" + "\n\\end{flalign}",
-		# 	# "The state of the Qbit",
-		# 	# "\\begin{flushleft}"
-		# 	# "The state of the Qbit"
-		# 	# "\\\\"
-		# 	# "as represented in the Bloch Sphere."
-		# 	# "\\end{flushleft}",
-		# 	alignment="",
-		# 	# template_tex_file_body=TEMPLATE_TEXT_FILE_BODY,
-	 #        # arg_separator="",
-		# )
-		self.intro_tex_1.move_to(2*UP)
-		self.add(self.intro_tex_1)
-		self.play(
-			Write(self.intro_tex_1),
-			run_time=1.5
-		)
-
-		if self.operator_names:
-			self.intro_tex_2 = TextMobject(
-				"\\begin{flushleft}"
-				"The following gates will be applied:"
-				"\\\\"
-				+
-				"\\\\".join(f"{i+1}) {n}" for i,n in enumerate(self.operator_names))
-				+
-				"\n\\end{flushleft}",
-				alignment="",
-			)
-			self.intro_tex_2.move_to(0.8*DOWN)
-			self.add(self.intro_tex_2)
-			self.play(
-				Write(self.intro_tex_2),
-				run_time=2.5
-			)
-
-		self.wait(self.intro_wait_time)
-
-		if self.operator_names:
-			self.play(
-				FadeOut(self.intro_tex_1),
-				FadeOut(self.intro_tex_2)
-			)
-		else:
-			self.play(
-				FadeOut(self.intro_tex_1)
-			)
-
-		self.wait(self.intro_fadeout_wait_time)
 
 	def init_camera(self):
 		self.set_camera_orientation(**self.init_camera_orientation)
@@ -407,8 +345,6 @@ class BlochSphereHadamardRotate(BlochSphere):
 	}
 
 	def construct(self):
-		if self.show_intro:
-			self.present_introduction()
 		self.init_camera()
 		self.init_axes()
 		self.init_sphere()
@@ -426,7 +362,7 @@ class BlochSphereHadamardRotate(BlochSphere):
 	def init_rotation_axis(self):
 		self.direction = 1/np.sqrt(2) * (X_AXIS + Z_AXIS)
 
-		d = Arrow3d(
+		d = Line(
 			start=ORIGIN,
 			end=self.direction * SPHERE_RADIUS
 		)
@@ -479,8 +415,6 @@ class BlochSphereWalk(BlochSphere):
 		"traj_max_length": 0, # 0 is infinite
 	}
 	def construct(self):
-		if self.show_intro:
-			self.present_introduction()
 		self.init_camera()
 		self.init_axes()
 		self.init_sphere()
