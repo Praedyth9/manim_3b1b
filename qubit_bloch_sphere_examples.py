@@ -9,6 +9,7 @@ OUTPUT_DIRECTORY = "qubit"
 # hadamard rotation
 # 
 
+
 class BlochSphereHadamardRotate_once_with_sphere_fast(BlochSphereHadamardRotate):
 	CONFIG = {
 		"rotate_sphere": True,
@@ -62,6 +63,7 @@ class BlochSphereHadamardRotate_twice_without_sphere_slow(BlochSphereHadamardRot
 # 
 # regular examples
 # 
+
 class BlochSphere_example_X(BlochSphere):
 	CONFIG = {
 		"operators": [
@@ -148,6 +150,19 @@ class BlochSphere_example_H_Z(BlochSphere):
 			"Pauli Z",
 		],
 	}
+
+class BlochSphere_example_X_H(BlochSphere):
+	CONFIG = {
+		"operators": [
+			Pauli_x,
+			Hadamard,
+		],
+		"operator_names": [
+			"Pauli X",
+			"Hadamard",
+		],
+	}
+
 class BlochSphere_example_H_Z_H(BlochSphere):
 	CONFIG = {
 		"operators": [
@@ -622,6 +637,33 @@ class BlochSphere_example_Rzm90_Ry90_Rz90_twice(BlochSphere):
 		] * 2,
 	}
 
+#
+# U3 gate example
+#
+
+class U3_test(BlochSphere):
+	CONFIG = {
+		"operators" : [
+			U3(45* DEGREES,45* DEGREES,30*DEGREES),
+		],
+		"operator_names":
+		[
+			"U3",
+		],
+	}
+
+class U3_test_diag(BlochSphere):
+	CONFIG = {
+		"operators" : [
+			U3(45* DEGREES,45* DEGREES,30*DEGREES),
+			U3(-45 *DEGREES, -30* DEGREES, -45 * DEGREES), ##Inverse of U(theta, phi, lamba) : U(-theta, -lambda, -phi)
+		],
+		"operator_names":
+		[
+			"U3(45, 45, 30)",
+			"U3(-45, -30, -45)",
+		],
+	}
 
 
 # 
