@@ -1,5 +1,7 @@
 from manimlib.imports import *
 from my_project.qubit_utils import *
+import math
+import sympy as sp
 
 OUTPUT_DIRECTORY = "qubit"
 
@@ -17,6 +19,9 @@ class State(Mobject):
 		self.line = self.create_line()
 		self.add(self.line)
 
+	def spherical_to_cartesian(r,theta,phi):
+		return [r*math.sin(theta)*math.cos(phi), r*math.sin(theta)*math.sin(phi),r*math.cos(theta)]
+	
 	def _get_cartesian(self):
 		return np.array( spherical_to_cartesian(self.r, self.theta, self.phi) )
 
@@ -43,6 +48,24 @@ state_zero  = State(1,             0,            r=SPHERE_RADIUS)
 state_one   = State(0,             1,            r=SPHERE_RADIUS)
 state_plus  = State(1/np.sqrt(2),  1/np.sqrt(2), r=SPHERE_RADIUS)
 state_minus = State(1/np.sqrt(2), -1/np.sqrt(2), r=SPHERE_RADIUS)
+
+
+class Matrix(Mobject):
+	def construct(self):
+		m0 = Matrix([[1, 0], [0, 1]])
+		self.add(m0)
+	
+	def apply_operator_matrix(self,operator, verbose = True): ##Old version of matrix update but it is way easier to just get the matrix from self.operator
+		if verbose:
+			print("from: ", self.m0)
+		result = operator
+		if verbose:
+			print("to : ", result)
+		new_matrix = Matrix(operator.dot(self.m0))
+		new_matrix.set_color(WHITE)
+		return new_matrix
+		
+
 
 
 class BlochSphere(SpecialThreeDScene):
@@ -94,6 +117,8 @@ class BlochSphere(SpecialThreeDScene):
 	}
 
 	def construct(self):
+		if self.show_intro:
+			self.present_introduction()
 		self.init_camera()
 		self.init_axes()
 		self.init_sphere()
@@ -103,10 +128,107 @@ class BlochSphere(SpecialThreeDScene):
 
 		for o in self.operators:
 			self.apply_operator(o)
+			#self.apply_operator_matrix(o)
 			self.wait(self.wait_time)
 		self.wait(self.final_wait_time)
 
+	
+	def present_introduction(self):
+		self.intro_tex_1 = TextMobject("Représentation de deux qubits")
+		self.intro_tex_1.move_to(2*UP + 2.5*LEFT)
 
+		self.intro_tex_12 = TextMobject("$\\ket{0}$", color = BLUE) 
+		self.intro_tex_12.next_to(self.intro_tex_1, RIGHT)
+
+		self.intro_tex_13 = TextMobject(" et ")
+		self.intro_tex_13.next_to(self.intro_tex_12, RIGHT)
+
+		self.intro_tex_14 = TextMobject("$\\ket{1}$", color = RED)
+		self.intro_tex_14.next_to(self.intro_tex_13, RIGHT)
+
+		self.intro_tex_15 = TextMobject("non intriqués")
+		self.intro_tex_15.next_to(self.intro_tex_14, RIGHT)
+
+		self.intro_tex_16 = TextMobject("sur la sphère de Bloch.")
+		self.intro_tex_16.move_to(1*UP)
+
+		print(self.intro_tex_1)
+		#self.intro_tex_1[2].set_color(BLUE)
+		#self.intro_tex_1[4].set_color(color=RED)
+		#self.intro_tex_1[2].set_color_by_tex('$\\ket{0}$', BLUE)
+		#self.intro_tex_1[4].set_color_by_tex('$\\ket{1}$', RED)
+		
+		#self.intro_tex_1 = TextMobject(
+			#"\\begin{flushleft}\n"
+			#"The State of the Qbit"
+			#"\\\\"
+			#"as represented in the Bloch Sphere."
+			#"\n\\end{flushleft}"
+		#)
+		# self.intro_tex_1 = TextMobject(
+		# 	# "\\begin{align*}\n" + "The state of the Qbit" + "\n\\end{align*}",
+		# 	"\\begin{flalign}\n" + "The state of the Qbit" + "\n\\end{flalign}",
+		# 	# "The state of the Qbit",
+		# 	# "\\begin{flushleft}"
+		# 	# "The state of the Qbit"
+		# 	# "\\\\"
+		# 	# "as represented in the Bloch Sphere."
+		# 	# "\\end{flushleft}",
+		# 	alignment="",
+		# 	# template_tex_file_body=TEMPLATE_TEXT_FILE_BODY,
+	 #        # arg_separator="",
+		# )
+		self.add(self.intro_tex_1)
+		self.wait(0.5)
+		self.play(
+			Write(self.intro_tex_1), Write(self.intro_tex_12), Write(self.intro_tex_13), Write(self.intro_tex_14), Write(self.intro_tex_15), Write(self.intro_tex_16),
+			run_time=1.5
+		)
+		self.wait(0.5)
+		
+		if self.operator_names:
+			self.intro_tex_2 = TextMobject(
+				"\\begin{flushleft}"
+				#"The following gates will be applied:"
+				"Nous appliquons sur ces qubits les portes suivantes :"
+				"\\\\"
+				+
+				"\\\\".join(f"{i+1}) {n}" for i,n in enumerate(self.operator_names))
+				+
+				"\n\\end{flushleft}"
+			)
+			self.intro_tex_2.move_to(0.8*DOWN)
+			self.add(self.intro_tex_2)
+			self.play(
+				Write(self.intro_tex_2),
+				run_time=2.5
+			)
+		
+		#self.intro_tex_1 = tex("Application de la matrice H : $\frac{1}{2} \begin{pmatrix}\n 1 & 1\\ \n 1 & -1 \n \end{pmatrix}$")
+		self.wait(self.intro_wait_time)
+
+		if self.operator_names:
+			self.play(
+				FadeOut(self.intro_tex_1),
+				FadeOut(self.intro_tex_12),
+				FadeOut(self.intro_tex_13),
+				FadeOut(self.intro_tex_14),
+				FadeOut(self.intro_tex_15),
+				FadeOut(self.intro_tex_16),
+				FadeOut(self.intro_tex_2)
+			)
+		else:
+			self.play(
+				FadeOut(self.intro_tex_1),
+				FadeOut(self.intro_tex_12),
+				FadeOut(self.intro_tex_13),
+				FadeOut(self.intro_tex_14),
+				FadeOut(self.intro_tex_15),
+				FadeOut(self.intro_tex_16)
+			)
+
+		self.wait(self.intro_fadeout_wait_time)
+	
 	def init_camera(self):
 		self.set_camera_orientation(**self.init_camera_orientation)
 
@@ -201,6 +323,12 @@ class BlochSphere(SpecialThreeDScene):
 			theta & phi
 		"""
 		# the qquad is used as a placeholder, since the value changes, and the length of the value changes.
+
+		#self.tex_matrix = tex("\\frac{1}{\sqrt{2}} \\begin{bmatrix} 1 & 1 \\\ 1 & -1 \\end{bmatrix}")
+		self.tex_matrix = tex("Transformation : ", "\\\\", "\\\\", "\\qquad \\begin{bmatrix} 1.000 & 0.000 \\\ 0.000 & 1.000 \end{bmatrix}")
+		self.tex_matrix.set_color(WHITE)
+		self.tex_matrix.move_to(- Z_AXIS * 2 + Y_AXIS * 3)
+
 		self.tex_zero_vec   = tex("\\ket{BLUE} = ", "\\qquad \\qquad 1", " \\\\ ", "\\qquad 0")
 		self.tex_zero_vec.set_color(BLUE)
 		self.tex_zero_vec.move_to(Z_AXIS * 2 - Y_AXIS * 4)
@@ -228,9 +356,11 @@ class BlochSphere(SpecialThreeDScene):
 
 		self.tex_dot_product= tex("\\bra{0}\\ket{1} = ", "\\qquad \\quad 0.000")
 		self.tex_dot_product.set_color(WHITE)
-		self.tex_dot_product.move_to(- Z_AXIS * 2 + Y_AXIS * 3)
+		self.tex_dot_product.move_to(- Z_AXIS * 2 - Y_AXIS * 5.5)
 
 		self.add(
+			self.tex_matrix,
+
 			self.tex_zero_vec,
 			self.tex_zero_theta,
 			self.tex_zero_phi,
@@ -244,19 +374,20 @@ class BlochSphere(SpecialThreeDScene):
 
 		# the initial values are only used to make enough space for later values
 		self.play(
-			*self.update_tex_transforms(self.zero, self.one),
+			*self.update_tex_transforms(self.zero, self.one, self.matrix),
 			run_time=0.1
 		)
 
-	def update_tex_transforms(self, new_zero, new_one):
+	def update_tex_transforms(self, new_zero, new_one, new_matrix):
 		zero_state = new_zero.get_vector()
 		zero_angles = vector_to_angles(zero_state)
 		one_state = new_one.get_vector()
 		one_angles = vector_to_angles(one_state)
-
+		print(new_matrix)
 		dot_product = np.vdot( new_one.get_vector(), new_zero.get_vector())
 
 		return(
+			transform(self.tex_matrix[3], matrix_to_tex_string(new_matrix)),
 			transform(self.tex_zero_vec[1],   complex_to_str(zero_state[0])),
 			transform(self.tex_zero_vec[3],   complex_to_str(zero_state[1])),
 			transform(self.tex_zero_theta[1], angle_to_str(zero_angles[0]) ),
@@ -273,11 +404,10 @@ class BlochSphere(SpecialThreeDScene):
 	def init_states(self):
 		self.old_zero = self.zero = State(1, 0, r=2)
 		self.old_one  = self.one  = State(0, 1, r=2)
-
 		self.zero.set_color(BLUE)
 		self.one.set_color(RED)
-
-		self.add(self.zero, self.one)
+		self.old_matrix = self.matrix = Matrix()
+		self.add(self.zero, self.one, self.matrix)
 
 	def apply_operator(self, operator, verbose=True):
 		# preparing the rotation animation
@@ -302,7 +432,12 @@ class BlochSphere(SpecialThreeDScene):
 		# preparing the tex update
 		new_zero = self.zero.apply_operator(operator)
 		new_one = self.one.apply_operator(operator)
-
+		new_matrix = np.round(operator, 3)
+		'''
+		if (new_matrix == np.array([[0.707, 0.707], [0.707,-0.707]])).all():
+			new_matrix = Matrix([["\frac{1}{\sqrt{2}}", "\frac{1}{\sqrt{2}}"], ["\frac{1}{\sqrt{2}}", "- \frac{1}{\sqrt{2}}"]])
+		'''
+		#Matrix library not working since this manim version is too old, so had to create a specific class as a placeholder but can't print latex formulas
 
 		self.play(
 			Rotate(
@@ -310,7 +445,7 @@ class BlochSphere(SpecialThreeDScene):
 				angle=rm.theta,
 				axis=rm.axis
 			),
-			*self.update_tex_transforms(new_zero, new_one),
+			*self.update_tex_transforms(new_zero, new_one, new_matrix),
 			run_time=self.rotate_time
 		)
 
@@ -329,11 +464,13 @@ class BlochSphere(SpecialThreeDScene):
 		self.play(
 			Transform(self.old_zero, new_zero),
 			Transform(self.old_one,  new_one),
+			#Transform(self.matrix, operator),
 			*self.update_tex_transforms(new_zero, new_one),
 		)
 
 		self.zero = new_zero
 		self.one  = new_one
+		#self.matrix = operator
 
 
 class BlochSphereHadamardRotate(BlochSphere):
@@ -345,6 +482,8 @@ class BlochSphereHadamardRotate(BlochSphere):
 	}
 
 	def construct(self):
+		if self.show_intro:
+			self.present_introduction()
 		self.init_camera()
 		self.init_axes()
 		self.init_sphere()
@@ -415,6 +554,8 @@ class BlochSphereWalk(BlochSphere):
 		"traj_max_length": 0, # 0 is infinite
 	}
 	def construct(self):
+		if self.show_intro:
+			self.present_introduction()
 		self.init_camera()
 		self.init_axes()
 		self.init_sphere()
