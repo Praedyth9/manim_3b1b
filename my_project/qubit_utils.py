@@ -25,6 +25,7 @@ s2 = np.sqrt(2)
 # the sqrt(i) is the phase, so that it will come out as H
 Sqrt_H = np.sqrt(1j) / s2 * np.array([[ 1 - 1j/s2 ,   - 1j/s2 ],
 									  [   - 1j/s2 , 1 + 1j/s2 ]])
+
 del s2
 
 Hadamard_Y_Z = 1/np.sqrt(2) * np.array([[1 ,-1j], [1j,-1 ]])
@@ -38,6 +39,11 @@ def Rx(phi):
 	return Hadamard.dot(Phase(phi)).dot(Hadamard)
 def Ry(phi):
 	return Hadamard_Y_Z.dot(Phase(phi)).dot(Hadamard_Y_Z)
+
+###Inverse of U3(theta, phi, lamba) : U(-theta, -lambda, -phi)
+def U3(theta, phi, lamb):
+	return np.array([[np.cos(theta/2), -1*np.exp(1j*lamb)*np.sin(theta/2)], 
+				  [np.exp(1j*phi)*np.sin(theta/2), np.exp(1j*(phi+lamb))*np.cos(theta/2)]])
 
 
 # 
@@ -225,6 +231,6 @@ class RotationMatrix(object):
 
 	Step 3:
 		Taking only the coefficient of (I), the amount of rotation is extracted based on:
-			http://www.vcpc.univie.ac.at/~ian/hotlist/qc/talks/bloch-sphere-rotations.pdf
+			https://www.researchgate.net/publication/335654130_Rotations_on_the_Bloch_Sphere
 			slide number 24, first line
 	"""
