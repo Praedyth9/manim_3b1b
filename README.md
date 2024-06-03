@@ -130,7 +130,7 @@ python3 -m manim BlochSphere_Example.py -pl
 
 Prompt should give you a list of choice, you can select multiples of them by separating numbers with a comma. You can remove the `-l` if you want to have a render in High Quality.
 
-If you want to edit this script so it can perform other operations on a qubit, edit `BlochSphere_example.py` and add a class to the script with a name and list of operators + operators you want to perform on a qubit following this syntax :
+If you want to edit this script so it can perform other operations on a qubit, edit `qubit_bloch_sphere_examples.py` and add a class to the script with a name and list of operators + operators you want to perform on a qubit following this syntax :
 ```py
 class BlochSphere_example_XXXX(BlochSphere):
     CONFIG = {
