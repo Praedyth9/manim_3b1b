@@ -41,11 +41,35 @@ def Ry(phi):
 	return Hadamard_Y_Z.dot(Phase(phi)).dot(Hadamard_Y_Z)
 
 ###Inverse of U3(theta, phi, lamba) : U(-theta, -lambda, -phi)
+###Inverse of U4(theta, phi, lambda, gamma) :  U4(-theta, -lambda- phi, -gamma)
 def U3(theta, phi, lamb):
 	return np.array([[np.cos(theta/2), -1*np.exp(1j*lamb)*np.sin(theta/2)], 
 				  [np.exp(1j*phi)*np.sin(theta/2), np.exp(1j*(phi+lamb))*np.cos(theta/2)]])
 
+def U4(theta, phi, lamb, gamma):
+	return np.exp(1j*gamma)*np.array([[np.cos(theta/2), -1*np.exp(1j*lamb)*np.sin(theta/2)], 
+				  [np.exp(1j*phi)*np.sin(theta/2), np.exp(1j*(phi+lamb))*np.cos(theta/2)]])
 
+
+#Rotation gate around a arbitrary given vector 
+def Rv(v1,v2,v3):
+	theta = np.float16(vector_to_angles([v1,v2,v3]))
+	return np.array([[np.cos(theta/2)- 1j*v3/2*np.sin(theta/2), -1*(1j*v1/theta + v2/theta)*np.sin(theta/2)],
+				  [-1*(1j*v1/theta - v2/theta)*np.sin(theta/2), np.cos(theta/2) + 1j*v3/2*np.sin(theta/2)]])
+
+#
+# quantum gates for 2 qubits 
+#
+
+Cnot = np.array([[1,0,0,0],[1,0,0,0],[0,0,0,1],[0,0,1,0]])
+
+HxH = np.kron(Hadamard, Hadamard)
+
+HxX = np.kron(Hadamard, Pauli_x)
+
+HxY = np.kron(Hadamard, Pauli_y)
+
+HxZ = np.kron(Hadamard, Pauli_z)
 # 
 # create a TexMobject which is properly aligned to 3d
 # 
@@ -81,10 +105,11 @@ def angle_to_str(c):
 # a quantum state class
 #
 def angles_to_vector(theta, phi):
-	# cos(theta/2) |0> + e^(i theta)*sin(theta/2) |1>
+	# cos(theta/2) |0> + e^(i phi)*sin(theta/2) |1>
 	zero = complex( np.cos(theta/2) )
 	one = np.exp(1j * phi) * np.sin(theta/2)
 	return np.array([zero, one])
+
 def vector_to_angles(v, verbose=False):
 	# alpha = v[0]
 	# abs(alpha)^2 = cos^2(theta/2)
@@ -125,7 +150,7 @@ def vector_to_angles(v, verbose=False):
 class RotationMatrix(object):
 	def __init__(self, matrix, automatic_decomposition=True):
 		if matrix.shape != (2,2):
-			raise ValueError("the input has to be a 2x2 np.ndarray")
+			raise ValueError("the input has to be a 2x2 or 4x4 np.ndarray")
 
 		self.matrix = matrix
 
