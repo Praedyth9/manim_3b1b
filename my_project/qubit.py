@@ -874,7 +874,11 @@ class BlochSphere2qubits(SpecialThreeDScene):
 		one_state = new_one.get_vector()
 		one_angles = vector_to_angles(one_state)
 		print(new_matrix)
-		#Add condition on entangled somehow and text to indicate whenever it's the case ot not ?
+		ent_str = "No"
+		if ((self.tensored[0]!=0 )& (self.tensored[3] !=0) & (self.tensored[1] == 0) & (self.tensored[2] == 0)) or ((self.tensored[1]!=0) & (self.tensored[2] !=0) & (self.tensored[0] == 0) & (self.tensored[3] == 0)):
+			ent_str = "Yes"
+		else:
+			pass
 
 		return(
 			transform(self.tex_matrix[3], matrix_to_tex_string(new_matrix)),
@@ -893,9 +897,12 @@ class BlochSphere2qubits(SpecialThreeDScene):
 			transform(self.tex_tensored[3], complex_to_str(round(new_tensored[1],2))),
 			transform(self.tex_tensored[5], complex_to_str(round(new_tensored[2],2))),
 		    transform(self.tex_tensored[7], complex_to_str(round(new_tensored[3],2))),
+
+			transform(self.tex_etg[1], ent_str),
 		)
 
 	def init_states(self):
+		# Init tensored different to e1 and compute q0 and q1
 		self.old_zero = self.zero = State(1, 0, r=2)
 		self.old_one  = self.one  = State(1, 0, r=2)
 		self.zero.set_color(BLUE)
@@ -915,21 +922,42 @@ class BlochSphere2qubits(SpecialThreeDScene):
 		if self.rotate_circles:
 			if self.circle_xy_show:
 				vgA.add(self.circle_xy)
+				vgB.add(self.circle_xy)
 			if self.circle_xz_show:
 				vgA.add(self.circle_xz)
+				vgB.add(self.circle_xz)
 			if self.circle_yz_show:
 				vgA.add(self.circle_yz)
+				vgB.add(self.circle_yz)
+
+		# Updating the tensored product
+		vector_result = operator @ self.tensored #matrix vector product
+		self.tensored = vector_result
+		
+		####################################################################################################
+		# We need to compute the state of each qubit depending on the tensored state. Handling each cases  #
+		# whatever they are entanged or not. If not, we're attributing values to qubits according to the   #
+		# rule previously mentionned. If they are, we're basing our computation on 2 qubit bloch Sphere    #
+		# paper and the code associated to it.                                                             #
+		####################################################################################################
 
 		#Checking if qubits are entangled
-		entangled = False
 		if ((self.tensored[0]!=0 )& (self.tensored[3] !=0) & (self.tensored[1] == 0) & (self.tensored[2] == 0)) or ((self.tensored[1]!=0) & (self.tensored[2] !=0) & (self.tensored[0] == 0) & (self.tensored[3] == 0)):
-			entangled = True
+			if self.tensored[0] < 1e-5:
+				print("Intrication 1")
+				new_zero = State(self.tensored[1], self.tensored[2], r = 2)
+				new_zero.set_color(BLUE)
+				alpha1 = 0
+				beta1 = 1
+			else:
+				print("Intrication 2")
+				new_zero = State(self.tensored[0], self.tensored[3], r = 2)
+				new_zero.set_color(BLUE)
+				alpha1 = 1
+				beta1 = 0
+
 		else:
-			pass
-		
-		if entangled == False:
-			vector_result = operator @ self.tensored #matrix vector product
-			self.tensored = vector_result
+			print("Pas intriqué")
 			mp.dps=15; mp.pretty=True; pi2=2*np.pi; s2=1/np.sqrt(2)
 			## MPMath Ranges:  asin(x)=[-pi/2, pi/2]; acos(x)=[pi, 0]; atan(x)=(-pi/2, pi/2); 
 			### atan2(y,x) returns angle (-pi, pi] for correct x,y quadrant ###
@@ -999,45 +1027,88 @@ class BlochSphere2qubits(SpecialThreeDScene):
 				#phiA=float(mp.acos(x1_coor/mp.sin(thetaA))) % pi2
 				phiA=float(mp.atan2(b_coor, x1_coor)) % pi2
 			new_zero = angles_to_vector(thetaA,phiA) 
-			print("self tensored")
-			print(self.tensored)
-			print("new zero")
-			print(new_zero)
 			alpha1 = (self.tensored[0] + self.tensored[2])/(new_zero[0]+new_zero[1])
 			beta1 = (self.tensored[1] + self.tensored[3])/(new_zero[0]+new_zero[1])
 			new_zero = State(*angles_to_vector(thetaA,phiA))
 			new_zero.set_color(BLUE)
-			
-		else:
-			if self.tensored[0] == 0:
-				new_zero = State(self.tensored[1], self.tensored[2], r = 2)
-				new_zero.set_color(BLUE)
-				alpha1 = 0
-				beta1 = 1
-			elif self.tensored[0] != 0:
-				new_zero = State(self.tensored[0], self.tensored[3], r = 2)
-				new_zero.set_color(BLUE)
-				alpha1 = 1
-				beta1 = 0
 		
+		rmA = RotationMatrix(np.array([[1,0],[0,1]]))
+		rmB = RotationMatrix(np.array([[1,0],[0,1]]))
+		print(rmA.axis)
+		print(rmA.theta)
 		new_matrix = np.round(operator, 3)
 		new_tensored = self.tensored
 
-
-		UA = np.array([[np.cos(thetaA/2), -np.sin(thetaA/2)],
-			   		[np.exp(1j*phiA)*np.sin(thetaA/2), np.exp(1j*phiA)*np.cos(thetaA/2)]])
-		
-		[thetaB, phiB] = vector_to_angles(np.array([alpha1,beta1]))
-
-		UB = np.array([[np.cos(thetaB/2), -np.sin(thetaB/2)],
-			   		[np.exp(1j*phiB)*np.sin(thetaB/2), np.exp(1j*phiB)*np.cos(thetaB/2)]])
-
-
 		new_one = State(alpha1,beta1, r = 2)
 		new_one.set_color(RED)
+
+
+		####################################################################################################
+		# To animate the animation of the effect of the operator on the pair of qubits, we need to 		   #
+		# determine axis and angle of rotation. Axis is detemined thanks to cross-product since the vector #
+		# are ploted with polar coordinate (so R^3). Angles are obtained with  det properties 			   #
+		####################################################################################################
+
+
+		## We need to find the angle between the previous vector stored in self and the new_zero//new_one
+		old_zero = (self.zero)._get_cartesian()
+		old_one = (self.one)._get_cartesian()
+		new_zero_vec = (new_zero)._get_cartesian()
+		new_one_vec = (new_one)._get_cartesian()
 		
-		rmA = RotationMatrix(UA)
-		rmB = RotationMatrix(UB)
+		## Using the cross product to compute a vector who will be orthogonal to both old and new State
+		rotA_axis = np.cross(old_zero, new_zero_vec)
+		rotB_axis = np.cross(old_one, new_one_vec)
+
+
+		if np.linalg.norm(rotA_axis,2) != 0:
+
+			## We make sure to normalize them
+
+			rotA_axis = rotA_axis/np.linalg.norm(rotA_axis,2)
+
+			## Obtening angles, we can notice it computes theta/2, that's why there's a 2*
+
+			angleA = 2*np.math.atan2(np.linalg.det([self.zero.get_vector(),new_zero.get_vector()]),np.dot(self.zero.get_vector(),new_zero.get_vector()))
+
+			## Gates of rotation around a normalized axis with rotation theta
+
+			UA = Rv(rotA_axis[0],rotA_axis[1],rotA_axis[2], angleA* 180/np.pi * DEGREES)
+
+			## Decomposing rotations around vector v into rotations around X, Y and Z axis 
+
+			rmA = RotationMatrix(UA)
+			if (np.round(RD(rotA_axis[0], rotA_axis[1], rotA_axis[2], angleA*180/np.pi * DEGREES) @ old_zero,3) != np.round(new_zero_vec,3)).any(): ## Handling case angle differ from a factor -1
+				rmA.theta = -1 * rmA.theta
+			else:
+				pass
+		else:
+			rmA = RotationMatrix(np.array([[1,0], [0,1]]))
+			
+		if np.linalg.norm(rotB_axis,2) != 0:
+			rotB_axis = rotB_axis/np.linalg.norm(rotB_axis,2)
+			angleB = 2*np.math.atan2(np.linalg.det([self.one.get_vector(),new_one.get_vector()]),np.dot(self.one.get_vector(),new_one.get_vector()))
+			UB = Rv(rotB_axis[0],rotB_axis[1],rotB_axis[2], angleB* 180/np.pi * DEGREES)
+			rmB = RotationMatrix(UB)
+			if (np.round(RD(rotB_axis[0], rotB_axis[1], rotB_axis[2], angleB*180/np.pi * DEGREES) @ old_one,3) != np.round(new_one_vec,3)).any(): ## Handling case angle differ from a factor -1
+				rmB.theta = -1 * rmB.theta
+			else:
+				pass
+		else:
+			rmB = RotationMatrix(np.array([[1,0], [0,1]]))
+
+	
+		'''
+		## For debug
+		print("affichage de UA ")
+		print(RD(rotA_axis[0], rotA_axis[1], rotA_axis[2], angleA*180/np.pi * DEGREES) @ old_zero)
+		print(new_zero_vec)
+		print("Affichage de UB")
+		print(RD(rotB_axis[0], rotB_axis[1], rotB_axis[2], angleB*180/np.pi * DEGREES) @ old_one)
+		print(new_one_vec)
+		'''
+	
+		
 		
 		self.matrix = operator
 		if verbose:

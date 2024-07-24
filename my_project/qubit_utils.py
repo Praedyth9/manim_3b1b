@@ -9,6 +9,8 @@ SPHERE_RADIUS = 2
 #
 # quantum gates
 #
+
+Id = np.array([[1,0],[0,1]])
 Hadamard = 1/np.sqrt(2) * np.array([[1,1],[1,-1]])
 Pauli_x = np.array([[0,1],
 					[1,0]])
@@ -52,16 +54,17 @@ def U4(theta, phi, lamb, gamma):
 
 
 #Rotation gate around a arbitrary given vector 
-def Rv(v1,v2,v3):
-	theta = np.float16(vector_to_angles([v1,v2,v3]))
-	return np.array([[np.cos(theta/2)- 1j*v3/2*np.sin(theta/2), -1*(1j*v1/theta + v2/theta)*np.sin(theta/2)],
-				  [-1*(1j*v1/theta - v2/theta)*np.sin(theta/2), np.cos(theta/2) + 1j*v3/2*np.sin(theta/2)]])
+def Rv(v1,v2,v3, theta): #theta is given in degrees
+	return np.array([[np.cos(theta/2)- 1j*v3/theta*np.sin(theta/2), -1*(1j*v1/theta + v2/theta)*np.sin(theta/2)],
+				  [-1*(1j*v1/theta - v2/theta)*np.sin(theta/2), np.cos(theta/2) + 1j*v3/theta*np.sin(theta/2)]])
 
 #
 # quantum gates for 2 qubits 
 #
 
-Cnot = np.array([[1,0,0,0],[1,0,0,0],[0,0,0,1],[0,0,1,0]])
+Cnot = np.array([[1,0,0,0],[0,1,0,0],[0,0,0,1],[0,0,1,0]])
+
+SWAP = np.array([[1,0,0,0],[0,0,1,0],[0,1,0,0],[0,0,0,1]])
 
 HxH = np.kron(Hadamard, Hadamard)
 
@@ -70,6 +73,28 @@ HxX = np.kron(Hadamard, Pauli_x)
 HxY = np.kron(Hadamard, Pauli_y)
 
 HxZ = np.kron(Hadamard, Pauli_z)
+
+XxH = np.kron(Hadamard, Pauli_x)
+
+YxH = np.kron(Hadamard, Pauli_y)
+
+ZxH = np.kron(Hadamard, Pauli_z)
+
+HxI = np.kron(Hadamard, Id)
+
+IxH = np.kron(Id, Hadamard)
+
+def CPH(theta):
+	return np.array([[1,0,0,0],[0,1,0,0], [0,0,1,0], [0,0,0,np.exp(1j*theta)]])
+
+#
+# NOT A GATE, we're defining a 3*3 rotation matrix for verification purposes in qubit.py
+#
+
+def RD(v1, v2, v3, theta): ## takes in parameter components of a normalized vector + angle in degrees
+	return np.array([[np.cos(theta) + v1**2 * (1-np.cos(theta)), v1*v2*(1-np.cos(theta))-v3*np.sin(theta), v1*v3*(1-np.cos(theta)) + v2 * np.sin(theta)],
+				  	[ v2*v1*(1-np.cos(theta)) + v3*np.sin(theta), np.cos(theta)+v2*v2*(1 - np.cos(theta)), v2*v3*(1-np.cos(theta)) - v1 * np.sin(theta)],
+					[ v3*v1*(1-np.cos(theta)) - v2*np.sin(theta), v3*v2*(1-np.cos(theta)) + v1 * np.sin(theta), np.cos(theta)+ v3*v3*(1-np.cos(theta))]])
 # 
 # create a TexMobject which is properly aligned to 3d
 # 
@@ -198,8 +223,10 @@ class RotationMatrix(object):
 			self.gamma,
 			self.delta
 		])
-
-		return np.array([
+		if n == 0:
+			return np.array([0,0,0])
+		else:
+			return np.array([
 			abs(self.beta ) / n,
 			abs(self.gamma) / n,
 			abs(self.delta) / n,
