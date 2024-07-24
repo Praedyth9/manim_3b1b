@@ -149,8 +149,6 @@ We can tell both qubits are entangled, so the first qubit will be equal to $\fra
 
 The computation of the states of the qubits displayed is allowed by this [Github repository](https://github.com/CRWie/two-qubit-Bloch-sphere). 
 
-08 June 2024 : The representation of the two qubits only works with one single operation, a fix for that will be available soon.
-
 ### Launching the script and create new animations
 
 You need to open a cmd in the directory where you put all of the code and type :
