@@ -9,4 +9,6 @@ opencv-python
 pycairo
 pydub
 pygments
+quaternionic
+sympy
 pyreadline; sys_platform == 'win32'
